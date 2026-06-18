@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<!-- EnduranceLog v3 - built 2026-06-17 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnduranceLog v5</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f5f5f4;--bg3:#eeede9;
+  --text:#1a1a18;--text2:#5c5c58;--text3:#9a9a94;
+  --border:rgba(0,0,0,0.12);--borderh:rgba(0,0,0,0.25);
+  --blue:#378ADD;--bluel:#E6F1FB;--blued:#0C447C;
+  --green:#639922;--greenl:#EAF3DE;--greend:#27500A;
+  --red:#D85A30;--redl:#FCEBEB;--redd:#A32D2D;
+  --r:8px;--rl:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1e1e1c;--bg2:#2a2a27;--bg3:#141412;--text:#f0efe9;--text2:#a8a8a0;--text3:#6a6a62;--border:rgba(255,255,255,0.12);--borderh:rgba(255,255,255,0.25);--bluel:#0c2840;--blued:#85B7EB;--greenl:#1a2e08;--greend:#97C459;--redl:#2e1010;--redd:#F09595}
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:32px;width:440px;max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.auth-logo{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.auth-logo i{color:var(--blue);font-size:24px}
+.auth-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.auth-tabs{display:flex;margin-bottom:24px;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden}
+.auth-tab{flex:1;padding:9px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--text2);transition:background .12s}
+.auth-tab.active{background:var(--bg2);color:var(--text);font-weight:500}
+.fr{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.fl{font-size:12px;font-weight:500;color:var(--text2)}
+.fi{width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);transition:border-color .12s}
+.fi:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(55,138,221,0.12)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.role-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.role-card{border:1.5px solid var(--border);border-radius:var(--r);padding:14px 10px;cursor:pointer;text-align:center;transition:all .12s}
+.role-card:hover{border-color:var(--borderh)}
+.role-card.selected{border-color:var(--blue);background:var(--bluel)}
+.role-card i{font-size:24px;display:block;margin-bottom:6px;color:var(--text3)}
+.role-card.selected i{color:var(--blue)}
+.role-card.selected.coach-card i{color:#D4537E}
+.role-card.coach-card.selected{border-color:#D4537E;background:#FDF0F4}
+.role-label{font-size:13px;font-weight:600;color:var(--text)}
+.role-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.btn-full{width:100%;padding:11px;border-radius:var(--r);border:none;cursor:pointer;font-size:14px;font-family:inherit;font-weight:600;background:var(--blue);color:#fff;transition:opacity .12s;margin-top:4px}
+.btn-full:hover{opacity:.88}
+.btn-full:disabled{opacity:.5;cursor:not-allowed}
+.msg{border-radius:var(--r);padding:11px 14px;font-size:13px;margin-bottom:14px;display:none;font-weight:500}
+.msg.err{background:var(--redl);color:var(--redd);border:1px solid rgba(210,90,48,.2)}
+.msg.ok{background:var(--greenl);color:var(--greend);border:1px solid rgba(99,153,34,.2)}
+.divider{text-align:center;font-size:12px;color:var(--text3);margin:16px 0;position:relative}
+.divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:0.5px;background:var(--border)}
+.divider span{background:var(--bg);padding:0 10px;position:relative}
+
+/* APP */
+.app{display:none;flex-direction:column;min-height:100vh}
+.app.show{display:flex}
+.topbar{background:var(--bg);border-bottom:0.5px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50}
+.logo{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+.logo i{color:var(--blue);font-size:18px}
+.nav{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+.nb{background:none;border:none;cursor:pointer;padding:5px 10px;border-radius:var(--r);font-size:12px;color:var(--text2);font-family:inherit;display:flex;align-items:center;gap:4px}
+.nb:hover{background:var(--bg2)}
+.nb.active{background:var(--bg2);color:var(--text);font-weight:500}
+.user-pill{display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:var(--r);background:var(--bg2);font-size:12px;color:var(--text2)}
+.rbadge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:600}
+.rbadge.coach{background:#F4C0D1;color:#72243E}
+.rbadge.athlete{background:#B5D4F4;color:#0C447C}
+.signout{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;font-family:inherit}
+.signout:hover{color:var(--redd)}
+.main{display:flex;gap:14px;padding:16px;flex:1}
+.sidebar{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.content{flex:1;min-width:0;display:flex;flex-direction:column}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:14px}
+.ct{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.metric{padding:8px 10px;background:var(--bg2);border-radius:var(--r);margin-bottom:6px}
+.ml{font-size:10px;color:var(--text3)}
+.mv{font-size:18px;font-weight:500;color:var(--text)}
+.sr{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:0.5px solid var(--border);color:var(--text2)}
+.sr span:last-child{font-weight:500;color:var(--text)}
+.bp{background:var(--blue);color:#fff;border:none;border-radius:var(--r);padding:7px 14px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500;display:inline-flex;align-items:center;gap:5px}
+.bp:hover{opacity:.88}
+.bs{background:none;border:0.5px solid var(--borderh);border-radius:var(--r);padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text2);font-family:inherit}
+.bs:hover{background:var(--bg2)}
+.bd{background:none;border:0.5px solid var(--borderh);border-radius:var(--r);padding:7px 14px;cursor:pointer;font-size:12px;color:var(--redd);font-family:inherit}
+.bd:hover{background:var(--redl)}
+
+/* CALENDAR */
+.vp{display:none}.vp.active{display:flex;flex-direction:column;flex:1}
+.cal-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;flex-direction:column;flex:1}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;flex:1}
+.day-col{display:flex;flex-direction:column;gap:3px;min-height:0}
+.day-label{font-size:10px;color:var(--text3);text-align:center;padding:2px 0;flex-shrink:0}
+.day-cell{border-radius:var(--r);border:0.5px solid var(--border);background:var(--bg);padding:5px;cursor:pointer;flex:1;min-height:90px;overflow:hidden}
+.day-cell:hover{border-color:var(--borderh)}
+.day-cell.today{border-color:var(--blue);background:var(--bluel)}
+.wchip{border-radius:3px;padding:2px 4px;font-size:9px;font-weight:500;margin-bottom:2px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.wchip.coach-written{border-left:2px solid #D4537E}
+.cs{background:#B5D4F4;color:#0C447C}.cb{background:#C0DD97;color:#27500A}
+.cr{background:#F5C4B3;color:#712B13}.cbr{background:#F4C0D1;color:#72243E}
+.cst{background:#D3D1C7;color:#444441}.crs{background:#F1EFE8;color:#5F5E5A}
+.ab{width:100%;padding:4px;border-radius:var(--r);border:0.5px dashed var(--border);background:none;cursor:pointer;font-size:10px;color:var(--text3);font-family:inherit;flex-shrink:0}
+.ab:hover{background:var(--bg2)}
+.nw{font-size:10px;color:var(--text3);text-align:center;padding:4px}
+.wn{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-shrink:0}
+.wn button{background:none;border:0.5px solid var(--border);border-radius:var(--r);padding:3px 8px;cursor:pointer;font-family:inherit;color:var(--text2);font-size:11px}
+.wn button:hover{background:var(--bg2)}
+.wt{font-size:13px;font-weight:500;color:var(--text)}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--border);padding:20px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto}
+.mtitle{font-size:14px;font-weight:500;margin-bottom:14px;color:var(--text)}
+.mfr{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.mfl{font-size:12px;color:var(--text2)}
+.mfr input,.mfr select,.mfr textarea{width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text)}
+.mfr input:focus,.mfr select:focus,.mfr textarea:focus{outline:none;border-color:var(--blue)}
+.mfr textarea{height:52px;resize:vertical}
+.mg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.fa{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.tb{border:0.5px solid var(--border);border-radius:4px;padding:3px 9px;cursor:pointer;font-size:11px;font-family:inherit;background:none;color:var(--text2)}
+.tb:hover{background:var(--bg2)}
+.tb.sel.swim{background:#B5D4F4;color:#0C447C;border-color:#85B7EB}
+.tb.sel.bike{background:#C0DD97;color:#27500A;border-color:#97C459}
+.tb.sel.run{background:#F5C4B3;color:#712B13;border-color:#F0997B}
+.tb.sel.brick{background:#F4C0D1;color:#72243E;border-color:#ED93B1}
+.tb.sel.strength{background:#D3D1C7;color:#444441;border-color:#B4B2A9}
+.tb.sel.rest{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
+.photo-strip{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.photo-thumb{width:44px;height:44px;border-radius:var(--r);object-fit:cover;border:0.5px solid var(--border);cursor:pointer}
+.photo-drop{border:0.5px dashed var(--borderh);border-radius:var(--r);padding:8px;text-align:center;cursor:pointer;font-size:11px;color:var(--text3);margin-top:5px;display:block}
+.photo-drop:hover{background:var(--bg2)}
+.log-row{display:flex;align-items:flex-start;gap:10px;padding:8px 6px;border-bottom:0.5px solid var(--border);cursor:pointer;border-radius:var(--r)}
+.log-row:hover{background:var(--bg2)}
+.drop-zone{border:1.5px dashed var(--borderh);border-radius:var(--rl);padding:28px 20px;text-align:center;cursor:pointer;transition:background .12s;display:block}
+.drop-zone:hover,.drop-zone.dragover{background:var(--bg2)}
+.fmt-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:0.5px solid var(--border);font-size:11px;font-weight:500;color:var(--text2);margin:3px}
+.parse-result{border:0.5px solid var(--border);border-radius:var(--r);padding:12px;margin-top:12px}
+.parse-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:0.5px solid var(--border)}
+.parse-row:last-child{border:none}
+.route-canvas{width:100%;height:120px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--bg2);margin-top:8px}
+.cw{position:relative;width:100%;height:190px}
+.athlete-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--bluel);color:var(--blued);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:680px){
+  .main{flex-direction:column;padding:10px}
+  .sidebar{width:100%}
+  .mg4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text3)">Loading EnduranceLog...</div>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen" class="auth-wrap" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo"><i class="ti ti-activity"></i> EnduranceLog</div>
+    <div class="auth-sub">Training platform for runners &amp; triathletes</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="showTab('login')">Sign in</button>
+      <button class="auth-tab" id="tab-signup-btn" onclick="showTab('signup')">Create account</button>
+    </div>
+
+    <div id="auth-msg" class="msg"></div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="fr">
+        <label class="fl" for="l-email">Email address</label>
+        <input class="fi" type="email" id="l-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="fr">
+        <label class="fl" for="l-pass">Password</label>
+        <input class="fi" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-full" id="login-btn" onclick="doLogin()">
+        <span id="login-btn-text">Sign in</span>
+      </button>
+      <div class="divider"><span>Don't have an account?</span></div>
+      <button style="width:100%;padding:9px;border-radius:var(--r);border:1px solid var(--border);background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text2)" onclick="showTab('signup')">Create a free account</button>
+      <button style="width:100%;padding:7px;border-radius:var(--r);border:1px solid var(--border);background:none;cursor:pointer;font-size:11px;font-family:inherit;color:var(--text3);margin-top:8px" onclick="testConnection()">Test connection to server</button>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="tab-signup" style="display:none">
+      <div class="g2">
+        <div class="fr">
+          <label class="fl" for="s-name">Full name</label>
+          <input class="fi" type="text" id="s-name" placeholder="Will Oakes" autocomplete="name">
+        </div>
+        <div class="fr">
+          <label class="fl" for="s-phone">Phone number</label>
+          <input class="fi" type="tel" id="s-phone" placeholder="303-555-0100" autocomplete="tel">
+        </div>
+      </div>
+      <div class="fr">
+        <label class="fl" for="s-email">Email address</label>
+        <input class="fi" type="email" id="s-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="fr">
+        <label class="fl" for="s-pass">Password</label>
+        <input class="fi" type="password" id="s-pass" placeholder="Minimum 6 characters" autocomplete="new-password">
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="fl" style="margin-bottom:10px">I am signing up as a...</div>
+        <div class="role-row">
+          <div class="role-card selected" id="role-athlete" onclick="selectRole('athlete')">
+            <i class="ti ti-run"></i>
+            <div class="role-label">Athlete</div>
+            <div class="role-sub">Log &amp; track my training</div>
+          </div>
+          <div class="role-card coach-card" id="role-coach" onclick="selectRole('coach')">
+            <i class="ti ti-clipboard-list"></i>
+            <div class="role-label">Coach</div>
+            <div class="role-sub">Write plans for athletes</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-full" id="signup-btn" onclick="doSignup()">
+        <span id="signup-btn-text">Create account</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app">
+  <div class="topbar">
+    <div class="logo"><i class="ti ti-activity"></i> EnduranceLog</div>
+    <div class="nav">
+      <button class="nb active" onclick="sv('calendar',this)"><i class="ti ti-calendar"></i> Calendar</button>
+      <button class="nb" onclick="sv('import',this)"><i class="ti ti-upload"></i> Import</button>
+      <button class="nb" onclick="sv('log',this)"><i class="ti ti-list"></i> Log</button>
+      <button class="nb" onclick="sv('races',this)"><i class="ti ti-trophy"></i> Races</button>
+      <button class="nb" onclick="sv('stats',this)"><i class="ti ti-chart-bar"></i> Stats</button>
+      <button class="nb" id="coach-nav-btn" style="display:none" onclick="sv('coach',this)"><i class="ti ti-users"></i> My athletes</button>
+      <button class="nb" onclick="exportCSV()"><i class="ti ti-download"></i> Export</button>
+      <div class="user-pill">
+        <span id="user-name-pill">—</span>
+        <span id="user-role-pill" class="rbadge"></span>
+        <button class="signout" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="card" style="padding:12px">
+        <div class="ct">This week</div>
+        <div class="metric"><div class="ml">Total hours</div><div class="mv" id="wk-hours">0:00</div></div>
+        <div class="metric"><div class="ml">Distance</div><div class="mv" id="wk-dist">0 mi</div></div>
+        <div style="margin-top:6px">
+          <div class="sr"><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#378ADD;margin-right:4px"></span>Swim</span><span id="wk-swim">—</span></div>
+          <div class="sr"><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:4px"></span>Bike</span><span id="wk-bike">—</span></div>
+          <div class="sr"><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#D85A30;margin-right:4px"></span>Run</span><span id="wk-run">—</span></div>
+        </div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div class="ct">Next race</div>
+        <div id="next-race-content" style="font-size:11px;color:var(--text3)">No races added.</div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div class="ct">Load zones</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px"><span style="width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0"></span><span style="flex:1;color:var(--text2)">Easy</span><span id="pct-easy" style="font-weight:500">—</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px"><span style="width:7px;height:7px;border-radius:50%;background:#EF9F27;flex-shrink:0"></span><span style="flex:1;color:var(--text2)">Moderate</span><span id="pct-mod" style="font-weight:500">—</span></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0"></span><span style="flex:1;color:var(--text2)">Hard</span><span id="pct-hard" style="font-weight:500">—</span></div>
+      </div>
+      <button class="bp" style="width:100%;padding:8px;justify-content:center" onclick="openModal(null)"><i class="ti ti-plus"></i> Log workout</button>
+    </div>
+
+    <div class="content">
+      <div id="vp-calendar" class="vp active">
+        <div class="cal-card">
+          <div class="wn">
+            <button onclick="shiftWeek(-1)"><i class="ti ti-chevron-left"></i></button>
+            <span class="wt" id="week-label">—</span>
+            <button onclick="shiftWeek(1)"><i class="ti ti-chevron-right"></i></button>
+            <button onclick="weekOffset=0;renderWeek()" style="margin-left:auto">Today</button>
+          </div>
+          <div class="week-grid" id="week-grid"></div>
+        </div>
+      </div>
+
+      <div id="vp-import" class="vp">
+        <div class="card" style="margin-bottom:12px">
+          <div class="ct">Import from Coros / GPS watch</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Export from Coros, Garmin, or Strava and drop it here.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+            <span class="fmt-badge"><i class="ti ti-file-code" style="color:#378ADD"></i> GPX</span>
+            <span class="fmt-badge"><i class="ti ti-file-code" style="color:#639922"></i> TCX</span>
+            <span class="fmt-badge"><i class="ti ti-file-code" style="color:#D4537E"></i> FIT</span>
+            <span class="fmt-badge"><i class="ti ti-file-code" style="color:#BA7517"></i> KML</span>
+            <span class="fmt-badge"><i class="ti ti-file-spreadsheet" style="color:#3B6D11"></i> CSV</span>
+          </div>
+          <label class="drop-zone" id="drop-zone">
+            <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text3);display:block;margin-bottom:8px"></i>
+            <div style="font-size:13px;font-weight:500">Drop file here or click to browse</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">GPX · TCX · FIT · KML · CSV</div>
+            <input type="file" id="file-input" accept=".gpx,.tcx,.fit,.kml,.csv" style="display:none" onchange="handleFile(this.files[0])">
+          </label>
+          <div id="parse-output" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:8px">
+              <i class="ti ti-circle-check" style="color:#3B6D11;font-size:16px"></i>
+              <span style="font-size:13px;font-weight:500" id="parse-filename"></span>
+              <span style="font-size:10px;padding:2px 6px;border-radius:3px;background:#EAF3DE;color:#3B6D11;font-weight:500" id="parse-fmt"></span>
+            </div>
+            <div class="parse-result" id="parse-result"></div>
+            <canvas id="route-canvas" class="route-canvas" style="display:none"></canvas>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <button class="bp" onclick="confirmImport()"><i class="ti ti-check"></i> Save to log</button>
+              <button class="bs" onclick="resetImport()">Discard</button>
+            </div>
+          </div>
+          <div id="parse-error" style="display:none;margin-top:10px;padding:10px;border-radius:var(--r);background:var(--redl);color:var(--redd);font-size:12px"></div>
+        </div>
+        <div class="card">
+          <div class="ct">How to export from Coros</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            <div style="display:flex;gap:8px;margin-bottom:5px"><span style="width:18px;height:18px;border-radius:50%;background:var(--bluel);color:var(--blued);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</span>Open Coros app → tap the activity</div>
+            <div style="display:flex;gap:8px;margin-bottom:5px"><span style="width:18px;height:18px;border-radius:50%;background:var(--bluel);color:var(--blued);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</span>Tap share icon → Export</div>
+            <div style="display:flex;gap:8px;margin-bottom:5px"><span style="width:18px;height:18px;border-radius:50%;background:var(--bluel);color:var(--blued);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</span>Choose GPX or FIT format</div>
+            <div style="display:flex;gap:8px"><span style="width:18px;height:18px;border-radius:50%;background:var(--bluel);color:var(--blued);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</span>Save to device then drop above</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="vp-log" class="vp">
+        <div class="card"><div class="ct">All workouts</div><div id="log-list"></div></div>
+      </div>
+
+      <div id="vp-races" class="vp">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="ct" style="margin:0">Race schedule</div>
+            <button class="bp" style="font-size:11px;padding:5px 10px" onclick="openRaceModal(null)"><i class="ti ti-plus"></i> Add race</button>
+          </div>
+          <div id="race-list"></div>
+        </div>
+      </div>
+
+      <div id="vp-stats" class="vp">
+        <div class="card">
+          <div class="ct">Weekly volume (hours)</div>
+          <div class="cw"><canvas id="vol-chart"></canvas></div>
+          <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:9px;height:9px;border-radius:2px;background:#85B7EB"></span>Swim</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:9px;height:9px;border-radius:2px;background:#97C459"></span>Bike</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:9px;height:9px;border-radius:2px;background:#F0997B"></span>Run</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:9px;height:9px;border-radius:2px;background:#B4B2A9"></span>Other</span>
+          </div>
+          <div style="margin-top:16px" class="ct">Sport breakdown (all time)</div>
+          <div class="cw" style="height:150px"><canvas id="sport-chart"></canvas></div>
+        </div>
+      </div>
+
+      <div id="vp-coach" class="vp">
+        <div class="card" style="margin-bottom:12px">
+          <div class="ct">My athletes</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Add athletes by their email. They must have already signed up as an athlete.</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input type="email" id="invite-email" placeholder="athlete@email.com" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text)">
+            <button class="bp" onclick="inviteAthlete()"><i class="ti ti-plus"></i> Add athlete</button>
+          </div>
+          <div id="athlete-list"><div style="font-size:12px;color:var(--text3)">No athletes yet.</div></div>
+        </div>
+        <div class="card" id="write-workout-card" style="display:none">
+          <div class="ct">Write workout for <span id="selected-athlete-name" style="color:var(--text)">—</span></div>
+          <div class="mfr">
+            <div class="mfl">Sport</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px" id="coach-type-btns">
+              <button class="tb swim" onclick="selCoachType('swim',this)">Swim</button>
+              <button class="tb bike" onclick="selCoachType('bike',this)">Bike</button>
+              <button class="tb run sel" onclick="selCoachType('run',this)">Run</button>
+              <button class="tb brick" onclick="selCoachType('brick',this)">Brick</button>
+              <button class="tb strength" onclick="selCoachType('strength',this)">Strength</button>
+              <button class="tb rest" onclick="selCoachType('rest',this)">Rest / off</button>
+            </div>
+          </div>
+          <div class="mg2">
+            <div class="mfr"><div class="mfl">Date</div><input type="date" id="cw-date"></div>
+            <div class="mfr"><div class="mfl">Title</div><input type="text" id="cw-title" placeholder="Tempo run 6x800m"></div>
+          </div>
+          <div class="mg4">
+            <div class="mfr"><div class="mfl">Duration (min)</div><input type="number" id="cw-dur" placeholder="60"></div>
+            <div class="mfr"><div class="mfl">Distance (mi)</div><input type="number" id="cw-dist" step="0.1" placeholder="6.2"></div>
+            <div class="mfr"><div class="mfl">Target RPE</div><input type="number" id="cw-rpe" min="1" max="10" placeholder="7"></div>
+            <div class="mfr"><div class="mfl">Target HR</div><input type="number" id="cw-hr" placeholder="155"></div>
+          </div>
+          <div class="mfr"><div class="mfl">Instructions</div><textarea id="cw-notes" placeholder="Warm up 10 min easy, 6x800m at 5K pace with 90s recovery..."></textarea></div>
+          <div class="fa">
+            <button class="bs" onclick="cancelCoachWorkout()">Cancel</button>
+            <button class="bp" onclick="saveCoachWorkout()"><i class="ti ti-send"></i> Send to athlete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKOUT MODAL -->
+<div id="workout-modal" class="modal-overlay">
+<div class="modal">
+  <div class="mtitle" id="modal-title">Log workout</div>
+  <div id="coach-banner" style="display:none;background:var(--bluel);color:var(--blued);border-radius:var(--r);padding:8px 10px;font-size:12px;margin-bottom:12px"><i class="ti ti-clipboard-list"></i> Written by your coach</div>
+  <div class="mfr">
+    <div class="mfl">Sport</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px" id="type-btns">
+      <button class="tb swim" onclick="selType('swim',this)">Swim</button>
+      <button class="tb bike" onclick="selType('bike',this)">Bike</button>
+      <button class="tb run sel" onclick="selType('run',this)">Run</button>
+      <button class="tb brick" onclick="selType('brick',this)">Brick</button>
+      <button class="tb strength" onclick="selType('strength',this)">Strength</button>
+      <button class="tb rest" onclick="selType('rest',this)">Rest / off</button>
+    </div>
+  </div>
+  <div class="mg2">
+    <div class="mfr"><div class="mfl">Date</div><input type="date" id="f-date"></div>
+    <div class="mfr"><div class="mfl">Title</div><input type="text" id="f-title" placeholder="Easy aerobic run"></div>
+  </div>
+  <div class="mg4">
+    <div class="mfr"><div class="mfl">Duration (min)</div><input type="number" id="f-dur" placeholder="60"></div>
+    <div class="mfr"><div class="mfl">Distance (mi)</div><input type="number" id="f-dist" step="0.1" placeholder="6.2"></div>
+    <div class="mfr"><div class="mfl">RPE (1–10)</div><input type="number" id="f-rpe" min="1" max="10" placeholder="6"></div>
+    <div class="mfr"><div class="mfl">Avg HR</div><input type="number" id="f-hr" placeholder="148"></div>
+  </div>
+  <div class="mg3">
+    <div class="mfr"><div class="mfl">Max HR</div><input type="number" id="f-hrmax" placeholder="172"></div>
+    <div class="mfr"><div class="mfl">Pace (min/mi)</div><input type="text" id="f-pace" placeholder="8:30"></div>
+    <div class="mfr"><div class="mfl">Elevation (ft)</div><input type="number" id="f-elev" placeholder="320"></div>
+  </div>
+  <div class="mfr"><div class="mfl">Notes</div><textarea id="f-notes" placeholder="How did it feel?"></textarea></div>
+  <div class="mfr">
+    <div class="mfl">Photos</div>
+    <div class="photo-strip" id="photo-strip"></div>
+    <label class="photo-drop"><i class="ti ti-camera"></i> Add photos<input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)"></label>
+  </div>
+  <div class="fa">
+    <button class="bd" id="del-btn" onclick="deleteWorkout()" style="display:none"><i class="ti ti-trash"></i> Delete</button>
+    <button class="bs" onclick="closeModal('workout-modal')">Cancel</button>
+    <button class="bp" onclick="saveWorkout()">Save workout</button>
+  </div>
+</div>
+</div>
+
+<!-- RACE MODAL -->
+<div id="race-modal" class="modal-overlay">
+<div class="modal">
+  <div class="mtitle" id="race-modal-title">Add race</div>
+  <div class="mg2">
+    <div class="mfr"><div class="mfl">Race name</div><input type="text" id="r-name" placeholder="Boulder 70.3"></div>
+    <div class="mfr"><div class="mfl">Race date</div><input type="date" id="r-date"></div>
+  </div>
+  <div class="mg2">
+    <div class="mfr"><div class="mfl">Type</div>
+      <select id="r-type"><option>Sprint tri</option><option>Olympic tri</option><option>70.3 / Half iron</option><option>Ironman</option><option>5K run</option><option>10K run</option><option>Half marathon</option><option>Marathon</option><option>Ultra</option><option>Other</option></select>
+    </div>
+    <div class="mfr"><div class="mfl">Location</div><input type="text" id="r-loc" placeholder="Boulder, CO"></div>
+  </div>
+  <div class="mfr"><div class="mfl">Goals / notes</div><textarea id="r-notes" placeholder="A-race, goal sub 4:45..."></textarea></div>
+  <div class="fa">
+    <button class="bd" id="race-del-btn" onclick="deleteRace()" style="display:none"><i class="ti ti-trash"></i> Delete</button>
+    <button class="bs" onclick="closeModal('race-modal')">Cancel</button>
+    <button class="bp" onclick="saveRace()">Save race</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────
+const SURL = 'https://egwzxartedqksxavtpcy.supabase.co';
+const SKEY = 'sb_publishable_JAcYhnfFrlj0BuojFO_vmg_cJj-0bn4';
+
+// ── INIT ───────────────────────────────────────────────────────────
+let sb;
+try {
+  sb = supabase.createClient(SURL, SKEY);
+} catch(e) {
+  document.getElementById('loading-screen').innerHTML = '<div style="text-align:center;padding:40px;color:#A32D2D"><b>Failed to load Supabase SDK.</b><br>Please check your internet connection and reload.</div>';
+}
+
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CHIP = {swim:'cs',bike:'cb',run:'cr',brick:'cbr',strength:'cst',rest:'crs'};
+const TCOL = {swim:'#378ADD',bike:'#639922',run:'#D85A30',brick:'#D4537E',strength:'#888780',rest:'#888780'};
+const TICON = {swim:'waves',bike:'bike',run:'run',brick:'refresh',strength:'barbell',rest:'moon'};
+
+let currentUser = null, currentProfile = null;
+let workouts = [], races = [];
+let weekOffset = 0, editId = null, editRaceId = null;
+let currentType = 'run', pendingPhotos = [];
+let parsedImport = null, volChart = null, sportChart = null;
+let selectedAthleteId = null, selectedAthleteName = null, coachType = 'run';
+
+// ── AUTH HELPERS ───────────────────────────────────────────────────
+function showTab(t) {
+  document.getElementById('tab-login').style.display = t === 'login' ? 'block' : 'none';
+  document.getElementById('tab-signup').style.display = t === 'signup' ? 'block' : 'none';
+  document.getElementById('tab-login-btn').classList.toggle('active', t === 'login');
+  document.getElementById('tab-signup-btn').classList.toggle('active', t === 'signup');
+  clearMsg();
+}
+
+let selectedRole = 'athlete';
+function selectRole(r) {
+  selectedRole = r;
+  document.getElementById('role-athlete').classList.toggle('selected', r === 'athlete');
+  document.getElementById('role-coach').classList.toggle('selected', r === 'coach');
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('auth-msg');
+  const safeText = (typeof text === 'object' && text !== null) ? JSON.stringify(text) : String(text || 'Unknown error');
+  el.textContent = safeText;
+  el.className = 'msg ' + type;
+  el.style.display = 'block';
+}
+function clearMsg() {
+  const el = document.getElementById('auth-msg');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function setBtnLoading(id, loading, text) {
+  const btn = document.getElementById(id);
+  btn.disabled = loading;
+  document.getElementById(id + '-text').textContent = loading ? 'Please wait...' : text;
+}
+
+// ── CONNECTION TEST ───────────────────────────────────────────────
+async function testConnection() {
+  showMsg('Testing connection...', 'ok');
+  try {
+    const { data, error } = await sb.from('profiles').select('count').limit(1);
+    if (error) {
+      showMsg('DB error: ' + (error.message || JSON.stringify(error)), 'err');
+    } else {
+      showMsg('Connected to Supabase successfully!', 'ok');
+    }
+  } catch(e) {
+    showMsg('Connection failed: ' + (e?.message || e?.toString()), 'err');
+  }
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────
+async function doLogin() {
+  clearMsg();
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  if (!email || !pass) { showMsg('Please enter your email and password.', 'err'); return; }
+  setBtnLoading('login-btn', true, 'Sign in');
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      showMsg(error.message === 'Invalid login credentials'
+        ? 'Incorrect email or password. Please try again.'
+        : error.message, 'err');
+      setBtnLoading('login-btn', false, 'Sign in');
+    }
+    // success handled by onAuthStateChange
+  } catch(e) {
+    showMsg('Connection error. Check your internet and try again.', 'err');
+    setBtnLoading('login-btn', false, 'Sign in');
+  }
+}
+
+// ── SIGNUP ─────────────────────────────────────────────────────────
+async function doSignup() {
+  clearMsg();
+  const name = document.getElementById('s-name').value.trim();
+  const phone = document.getElementById('s-phone').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  const pass = document.getElementById('s-pass').value;
+  if (!name || !email || !pass) { showMsg('Please fill in name, email, and password.', 'err'); return; }
+  if (pass.length < 6) { showMsg('Password must be at least 6 characters.', 'err'); return; }
+  setBtnLoading('signup-btn', true, 'Create account');
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { name, phone, role: selectedRole } }
+    });
+    if (error) {
+      // handle all possible error formats from Supabase
+      const msg = error.message || error.msg || error.error_description || (typeof error.error === "string" ? error.error : null) || error.status || (typeof error === "string" ? error : JSON.stringify(error, null, 2));
+      showMsg(msg, 'err');
+      setBtnLoading('signup-btn', false, 'Create account');
+      return;
+    }
+    if (data.user) {
+      await sb.from('profiles').upsert({ id: data.user.id, name, email, phone, role: selectedRole });
+    }
+    if (data.session) {
+      // email confirm is OFF — user is logged in immediately, onAuthStateChange handles it
+      showMsg('Account created! Signing you in...', 'ok');
+    } else {
+      // email confirm is ON — ask them to check email
+      showMsg('Account created! Check your email to confirm, then sign in here.', 'ok');
+      setBtnLoading('signup-btn', false, 'Create account');
+      setTimeout(() => showTab('login'), 2500);
+    }
+  } catch(e) {
+    const msg = e?.message || e?.toString() || "Unknown error";
+    showMsg(msg, 'err');
+    setBtnLoading('signup-btn', false, 'Create account');
+  }
+}
+
+// ── LOGOUT ─────────────────────────────────────────────────────────
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null; workouts = []; races = [];
+  document.getElementById('main-app').classList.remove('show');
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+// ── PROFILE ────────────────────────────────────────────────────────
+async function loadProfile(user) {
+  let { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (!data) {
+    const meta = user.user_metadata || {};
+    await sb.from('profiles').upsert({
+      id: user.id, name: meta.name || '', email: user.email,
+      phone: meta.phone || '', role: meta.role || 'athlete'
+    });
+    const res = await sb.from('profiles').select('*').eq('id', user.id).single();
+    data = res.data;
+  }
+  currentProfile = data;
+  document.getElementById('user-name-pill').textContent = data.name || data.email;
+  const rp = document.getElementById('user-role-pill');
+  rp.className = 'rbadge ' + (data.role === 'coach' ? 'coach' : 'athlete');
+  rp.textContent = data.role === 'coach' ? 'Coach' : 'Athlete';
+  document.getElementById('coach-nav-btn').style.display = data.role === 'coach' ? '' : 'none';
+}
+
+// ── AUTH STATE ─────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('main-app').classList.add('show');
+    await loadProfile(session.user);
+    await loadData();
+    renderWeek();
+  } else {
+    document.getElementById('main-app').classList.remove('show');
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+});
+
+// enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('tab-login').style.display !== 'none') doLogin();
+    else if (document.getElementById('tab-signup').style.display !== 'none') doSignup();
+  }
+});
+
+// ── DATA ───────────────────────────────────────────────────────────
+async function loadData() {
+  const [wr, rr] = await Promise.all([
+    sb.from('workouts').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }),
+    sb.from('races').select('*').eq('user_id', currentUser.id).order('date', { ascending: true })
+  ]);
+  workouts = wr.data || [];
+  races = rr.data || [];
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function weekStart(off) { const d = new Date(); d.setDate(d.getDate() - d.getDay() + off * 7); d.setHours(0,0,0,0); return d; }
+function fmtDur(m) { if (!m) return '—'; const h = Math.floor(m/60), mn = m%60; return h ? `${h}h ${mn}m` : `${mn}m`; }
+function fmtDist(d) { return d ? `${parseFloat(d).toFixed(1)} mi` : '—'; }
+function fmtDate(ds) { if (!ds) return ''; const [y,mo,d] = ds.split('-'); return `${MONTHS[parseInt(mo)-1]} ${parseInt(d)}, ${y}`; }
+function rpeColor(r) { r = parseInt(r); if (r <= 4) return ['#EAF3DE','#3B6D11']; if (r <= 7) return ['#FAEEDA','#854F0B']; return ['#FCEBEB','#A32D2D']; }
+function mToMi(m) { return m / 1609.344; }
+function paceStr(spm) { if (!spm) return null; const s = spm * 1609.344; const m = Math.floor(s/60), sc = Math.round(s%60); return `${m}:${String(sc).padStart(2,'0')}`; }
+
+// ── VIEWS ──────────────────────────────────────────────────────────
+function sv(v, btn) {
+  document.querySelectorAll('.vp').forEach(p => p.classList.remove('active'));
+  document.getElementById('vp-' + v).classList.add('active');
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (v === 'stats') setTimeout(renderCharts, 80);
+  if (v === 'log') renderLog();
+  if (v === 'races') renderRaces();
+  if (v === 'coach') renderCoachView();
+}
+
+// ── CALENDAR ───────────────────────────────────────────────────────
+function renderWeek() {
+  const ws = weekStart(weekOffset);
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+  document.getElementById('week-label').textContent = `${MONTHS[ws.getMonth()]} ${ws.getDate()} – ${MONTHS[we.getMonth()]} ${we.getDate()}, ${we.getFullYear()}`;
+  const grid = document.getElementById('week-grid'); grid.innerHTML = '';
+  const today = todayStr();
+  const wDates = [];
+  for (let i = 0; i < 7; i++) { const d = new Date(ws); d.setDate(d.getDate() + i); wDates.push(d.toISOString().split('T')[0]); }
+  wDates.forEach((ds, i) => {
+    const col = document.createElement('div'); col.className = 'day-col';
+    const lbl = document.createElement('div'); lbl.className = 'day-label'; lbl.textContent = DAYS[i];
+    const cell = document.createElement('div'); cell.className = 'day-cell' + (ds === today ? ' today' : '');
+    const dayW = workouts.filter(w => w.date === ds);
+    if (!dayW.length) { const n = document.createElement('div'); n.className = 'nw'; n.textContent = '—'; cell.appendChild(n); }
+    dayW.forEach(w => {
+      const c = document.createElement('span');
+      c.className = 'wchip ' + (CHIP[w.type] || 'cs') + (w.written_by && w.written_by !== currentUser.id ? ' coach-written' : '');
+      c.textContent = w.title || w.type;
+      c.onclick = () => openModal(w.id);
+      cell.appendChild(c);
+    });
+    const ab = document.createElement('button'); ab.className = 'ab'; ab.textContent = '+';
+    ab.onclick = () => { openModal(null); document.getElementById('f-date').value = ds; };
+    cell.appendChild(ab); col.appendChild(lbl); col.appendChild(cell); grid.appendChild(col);
+  });
+  updateSidebar(wDates);
+}
+
+function updateSidebar(wDates) {
+  if (!wDates) { const ws = weekStart(weekOffset); wDates = []; for (let i = 0; i < 7; i++) { const d = new Date(ws); d.setDate(d.getDate()+i); wDates.push(d.toISOString().split('T')[0]); } }
+  const ww = workouts.filter(w => wDates.includes(w.date));
+  const tot = ww.reduce((s,w) => s + (parseInt(w.duration)||0), 0);
+  document.getElementById('wk-hours').textContent = `${Math.floor(tot/60)}:${String(tot%60).padStart(2,'0')}`;
+  document.getElementById('wk-dist').textContent = (ww.reduce((s,w) => s + (parseFloat(w.distance)||0), 0)||0).toFixed(1) + ' mi';
+  const sm = ww.filter(w => w.type==='swim').reduce((s,w) => s+(parseInt(w.duration)||0),0);
+  const bm = ww.filter(w => w.type==='bike').reduce((s,w) => s+(parseInt(w.duration)||0),0);
+  const rm = ww.filter(w => w.type==='run'||w.type==='brick').reduce((s,w) => s+(parseInt(w.duration)||0),0);
+  document.getElementById('wk-swim').textContent = sm ? fmtDur(sm) : '—';
+  document.getElementById('wk-bike').textContent = bm ? fmtDur(bm) : '—';
+  document.getElementById('wk-run').textContent = rm ? fmtDur(rm) : '—';
+  const sc = ww.filter(w => w.rpe && w.duration);
+  let easy=0, mod=0, hard=0;
+  sc.forEach(w => { const r = parseInt(w.rpe); if (r<=4) easy+=parseInt(w.duration); else if (r<=7) mod+=parseInt(w.duration); else hard+=parseInt(w.duration); });
+  const tt = easy+mod+hard||1;
+  document.getElementById('pct-easy').textContent = sc.length ? Math.round(easy/tt*100)+'%' : '—';
+  document.getElementById('pct-mod').textContent = sc.length ? Math.round(mod/tt*100)+'%' : '—';
+  document.getElementById('pct-hard').textContent = sc.length ? Math.round(hard/tt*100)+'%' : '—';
+  updateNextRace();
+}
+
+function updateNextRace() {
+  const today = todayStr();
+  const up = races.filter(r => r.date >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const el = document.getElementById('next-race-content');
+  if (!up.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text3)">No upcoming races.</div>'; return; }
+  const r = up[0];
+  const days = Math.ceil((new Date(r.date) - new Date(today)) / 86400000);
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:var(--r);padding:8px 10px"><i class="ti ti-trophy" style="font-size:18px;color:var(--blue)"></i><div><div style="font-size:18px;font-weight:600">${days}d</div><div style="font-size:10px;color:var(--text3)">to go</div></div><div><div style="font-size:12px;font-weight:500">${r.name}</div><div style="font-size:10px;color:var(--text3)">${r.type}</div></div></div>`;
+}
+
+function shiftWeek(d) { weekOffset += d; renderWeek(); }
+
+// ── LOG ────────────────────────────────────────────────────────────
+function renderLog() {
+  const el = document.getElementById('log-list');
+  if (!workouts.length) { el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:24px">No workouts yet.</div>'; return; }
+  el.innerHTML = [...workouts].sort((a,b) => (b.date||'').localeCompare(a.date||'')).map(w => `
+    <div class="log-row" onclick="openModal('${w.id}')">
+      <i class="ti ti-${TICON[w.type]||'activity'}" style="font-size:16px;color:${TCOL[w.type]||'#888'};flex-shrink:0;margin-top:2px"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${w.title||w.type}${w.written_by&&w.written_by!==currentUser.id?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#F4C0D1;color:#72243E;margin-left:5px">Coach</span>':''}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(w.date)} · ${fmtDur(parseInt(w.duration))} · ${fmtDist(w.distance)}${w.avg_hr?' · '+w.avg_hr+' bpm':''}${w.pace?' · '+w.pace+'/mi':''}</div>
+      </div>
+      ${w.rpe?`<span style="font-size:10px;padding:2px 7px;border-radius:3px;background:${rpeColor(w.rpe)[0]};color:${rpeColor(w.rpe)[1]};flex-shrink:0">RPE ${w.rpe}</span>`:''}
+    </div>`).join('');
+}
+
+// ── RACES ──────────────────────────────────────────────────────────
+function renderRaces() {
+  const el = document.getElementById('race-list');
+  const today = todayStr();
+  if (!races.length) { el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:24px">No races added yet.</div>'; return; }
+  el.innerHTML = [...races].sort((a,b) => a.date.localeCompare(b.date)).map(r => {
+    const past = r.date < today;
+    const days = Math.ceil((new Date(r.date) - new Date(today)) / 86400000);
+    return `<div style="border:0.5px solid var(--border);border-radius:var(--r);padding:11px 13px;margin-bottom:7px;cursor:pointer${past?';opacity:.65':''}" onclick="openRaceModal('${r.id}')">
+      <div style="display:flex;align-items:center;gap:9px">
+        <i class="ti ti-trophy" style="font-size:18px;color:${past?'#888':'var(--blue)'}"></i>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${r.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${r.type}${r.location?' · '+r.location:''} · ${fmtDate(r.date)}</div></div>
+        <div style="text-align:right;flex-shrink:0"><div style="font-size:18px;font-weight:600">${past?'Done':days+'d'}</div><div style="font-size:10px;color:var(--text3)">${past?'completed':'to go'}</div></div>
+      </div></div>`;
+  }).join('');
+}
+
+// ── STATS ──────────────────────────────────────────────────────────
+function renderCharts() {
+  const weeks=[], labels=[];
+  for (let i=-7; i<=0; i++) {
+    const ws = weekStart(i); const wDates = [];
+    for (let j=0; j<7; j++) { const d = new Date(ws); d.setDate(d.getDate()+j); wDates.push(d.toISOString().split('T')[0]); }
+    weeks.push(wDates); labels.push(`${MONTHS[ws.getMonth()]} ${ws.getDate()}`);
+  }
+  const sw=[], bk=[], rn=[], ot=[];
+  weeks.forEach(wDates => {
+    const ww = workouts.filter(w => wDates.includes(w.date));
+    sw.push(+(ww.filter(w=>w.type==='swim').reduce((s,w)=>s+(parseInt(w.duration)||0),0)/60).toFixed(2));
+    bk.push(+(ww.filter(w=>w.type==='bike').reduce((s,w)=>s+(parseInt(w.duration)||0),0)/60).toFixed(2));
+    rn.push(+(ww.filter(w=>w.type==='run'||w.type==='brick').reduce((s,w)=>s+(parseInt(w.duration)||0),0)/60).toFixed(2));
+    ot.push(+(ww.filter(w=>w.type==='strength'||w.type==='rest').reduce((s,w)=>s+(parseInt(w.duration)||0),0)/60).toFixed(2));
+  });
+  if (volChart) volChart.destroy();
+  volChart = new Chart(document.getElementById('vol-chart'), {type:'bar',data:{labels,datasets:[{label:'Swim',data:sw,backgroundColor:'#85B7EB'},{label:'Bike',data:bk,backgroundColor:'#97C459'},{label:'Run',data:rn,backgroundColor:'#F0997B'},{label:'Other',data:ot,backgroundColor:'#B4B2A9'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+  const swT=workouts.reduce((s,w)=>s+(w.type==='swim'?parseInt(w.duration)||0:0),0);
+  const bkT=workouts.reduce((s,w)=>s+(w.type==='bike'?parseInt(w.duration)||0:0),0);
+  const rnT=workouts.reduce((s,w)=>s+(w.type==='run'||w.type==='brick'?parseInt(w.duration)||0:0),0);
+  const otT=workouts.reduce((s,w)=>s+(w.type==='strength'||w.type==='rest'?parseInt(w.duration)||0:0),0);
+  if (sportChart) sportChart.destroy();
+  sportChart = new Chart(document.getElementById('sport-chart'), {type:'doughnut',data:{labels:['Swim','Bike','Run','Other'],datasets:[{data:[swT,bkT,rnT,otT],backgroundColor:['#85B7EB','#97C459','#F0997B','#B4B2A9'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},padding:10}}}}});
+}
+
+// ── COACH ──────────────────────────────────────────────────────────
+async function renderCoachView() {
+  const { data } = await sb.from('coach_athletes')
+    .select('athlete_id, profiles!coach_athletes_athlete_id_fkey(id,name,email)')
+    .eq('coach_id', currentUser.id);
+  const el = document.getElementById('athlete-list');
+  if (!data || !data.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No athletes yet.</div>'; return; }
+  el.innerHTML = data.map(row => {
+    const p = row.profiles;
+    const initials = (p.name||p.email||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `<div class="athlete-row">
+      <div class="avatar">${initials}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.name||'—'}</div><div style="font-size:11px;color:var(--text3)">${p.email}</div></div>
+      <button class="bp" style="font-size:11px;padding:5px 10px" onclick="openCoachWorkout('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}')"><i class="ti ti-pencil"></i> Write workout</button>
+    </div>`;
+  }).join('');
+}
+
+async function inviteAthlete() {
+  const email = document.getElementById('invite-email').value.trim();
+  if (!email) { alert('Enter an athlete email.'); return; }
+  const { data } = await sb.from('profiles').select('id,name,email').eq('email', email).eq('role', 'athlete').single();
+  if (!data) { alert('No athlete account found with that email.'); return; }
+  const { error } = await sb.from('coach_athletes').insert({ coach_id: currentUser.id, athlete_id: data.id });
+  if (error && error.code === '23505') { alert('Already in your roster.'); return; }
+  if (error) { alert('Error: ' + error.message); return; }
+  document.getElementById('invite-email').value = '';
+  alert(`${data.name||data.email} added!`);
+  renderCoachView();
+}
+
+function openCoachWorkout(athleteId, athleteName) {
+  selectedAthleteId = athleteId; selectedAthleteName = athleteName;
+  document.getElementById('selected-athlete-name').textContent = athleteName;
+  document.getElementById('write-workout-card').style.display = 'block';
+  document.getElementById('cw-date').value = todayStr();
+  ['cw-title','cw-dur','cw-dist','cw-rpe','cw-hr','cw-notes'].forEach(id => document.getElementById(id).value = '');
+  coachType = 'run';
+  document.querySelectorAll('#coach-type-btns .tb').forEach(b => b.classList.remove('sel'));
+  document.querySelector('#coach-type-btns .run').classList.add('sel');
+  document.getElementById('write-workout-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelCoachWorkout() {
+  document.getElementById('write-workout-card').style.display = 'none';
+  selectedAthleteId = null;
+}
+
+function selCoachType(t, btn) {
+  coachType = t;
+  document.querySelectorAll('#coach-type-btns .tb').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+async function saveCoachWorkout() {
+  if (!selectedAthleteId) { alert('No athlete selected.'); return; }
+  const obj = {
+    user_id: selectedAthleteId, written_by: currentUser.id, type: coachType,
+    date: document.getElementById('cw-date').value || todayStr(),
+    title: document.getElementById('cw-title').value.trim() || coachType,
+    duration: parseInt(document.getElementById('cw-dur').value) || null,
+    distance: parseFloat(document.getElementById('cw-dist').value) || null,
+    rpe: parseInt(document.getElementById('cw-rpe').value) || null,
+    avg_hr: parseInt(document.getElementById('cw-hr').value) || null,
+    notes: document.getElementById('cw-notes').value.trim(), source: 'coach'
+  };
+  const { error } = await sb.from('workouts').insert(obj);
+  if (error) { alert('Error: ' + error.message); return; }
+  alert(`Workout sent to ${selectedAthleteName}!`);
+  cancelCoachWorkout();
+}
+
+// ── WORKOUT MODAL ──────────────────────────────────────────────────
+function selType(t, btn) {
+  currentType = t;
+  document.querySelectorAll('#type-btns .tb').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function handlePhotos(input) {
+  Array.from(input.files).forEach(f => { const r = new FileReader(); r.onload = e => { pendingPhotos.push(e.target.result); renderPhotoStrip(); }; r.readAsDataURL(f); });
+}
+function renderPhotoStrip() {
+  document.getElementById('photo-strip').innerHTML = pendingPhotos.map((p,i) => `<img src="${p}" class="photo-thumb" onclick="pendingPhotos.splice(${i},1);renderPhotoStrip()" title="Remove">`).join('');
+}
+
+function openModal(id) {
+  editId = id; pendingPhotos = [];
+  document.getElementById('coach-banner').style.display = 'none';
+  if (id) {
+    const w = workouts.find(x => x.id === id); if (!w) return;
+    document.getElementById('modal-title').textContent = 'Edit workout';
+    document.getElementById('del-btn').style.display = '';
+    if (w.written_by && w.written_by !== currentUser.id) document.getElementById('coach-banner').style.display = 'block';
+    currentType = w.type;
+    document.getElementById('f-date').value = w.date || '';
+    document.getElementById('f-title').value = w.title || '';
+    document.getElementById('f-dur').value = w.duration || '';
+    document.getElementById('f-dist').value = w.distance || '';
+    document.getElementById('f-rpe').value = w.rpe || '';
+    document.getElementById('f-hr').value = w.avg_hr || '';
+    document.getElementById('f-hrmax').value = w.max_hr || '';
+    document.getElementById('f-pace').value = w.pace || '';
+    document.getElementById('f-elev').value = w.elev_gain || '';
+    document.getElementById('f-notes').value = w.notes || '';
+    document.querySelectorAll('#type-btns .tb').forEach(b => { b.classList.remove('sel'); if (b.classList.contains(w.type)) b.classList.add('sel'); });
+  } else {
+    document.getElementById('modal-title').textContent = 'Log workout';
+    document.getElementById('del-btn').style.display = 'none';
+    currentType = 'run';
+    document.getElementById('f-date').value = todayStr();
+    ['f-title','f-dur','f-dist','f-rpe','f-hr','f-hrmax','f-pace','f-elev','f-notes'].forEach(i => document.getElementById(i).value = '');
+    document.querySelectorAll('#type-btns .tb').forEach(b => b.classList.remove('sel'));
+    document.querySelector('#type-btns .run').classList.add('sel');
+  }
+  renderPhotoStrip();
+  document.getElementById('workout-modal').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function saveWorkout() {
+  const obj = {
+    user_id: currentUser.id, type: currentType,
+    date: document.getElementById('f-date').value || todayStr(),
+    title: document.getElementById('f-title').value.trim() || currentType,
+    duration: parseInt(document.getElementById('f-dur').value) || null,
+    distance: parseFloat(document.getElementById('f-dist').value) || null,
+    rpe: parseInt(document.getElementById('f-rpe').value) || null,
+    avg_hr: parseInt(document.getElementById('f-hr').value) || null,
+    max_hr: parseInt(document.getElementById('f-hrmax').value) || null,
+    pace: document.getElementById('f-pace').value.trim() || null,
+    elev_gain: parseInt(document.getElementById('f-elev').value) || null,
+    notes: document.getElementById('f-notes').value.trim(), source: 'manual'
+  };
+  if (editId) {
+    await sb.from('workouts').update(obj).eq('id', editId);
+    const idx = workouts.findIndex(w => w.id === editId);
+    if (idx > -1) workouts[idx] = { ...workouts[idx], ...obj };
+  } else {
+    const { data } = await sb.from('workouts').insert(obj).select().single();
+    if (data) workouts.unshift(data);
+  }
+  closeModal('workout-modal'); renderWeek(); renderLog();
+}
+
+async function deleteWorkout() {
+  if (!editId || !confirm('Delete this workout?')) return;
+  await sb.from('workouts').delete().eq('id', editId);
+  workouts = workouts.filter(w => w.id !== editId);
+  closeModal('workout-modal'); renderWeek(); renderLog();
+}
+
+// ── RACE MODAL ─────────────────────────────────────────────────────
+function openRaceModal(id) {
+  editRaceId = id;
+  if (id) {
+    const r = races.find(x => x.id === id); if (!r) return;
+    document.getElementById('race-modal-title').textContent = 'Edit race';
+    document.getElementById('race-del-btn').style.display = '';
+    document.getElementById('r-name').value = r.name || '';
+    document.getElementById('r-date').value = r.date || '';
+    document.getElementById('r-type').value = r.type || 'Olympic tri';
+    document.getElementById('r-loc').value = r.location || '';
+    document.getElementById('r-notes').value = r.notes || '';
+  } else {
+    document.getElementById('race-modal-title').textContent = 'Add race';
+    document.getElementById('race-del-btn').style.display = 'none';
+    ['r-name','r-date','r-loc','r-notes'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('r-type').value = 'Olympic tri';
+  }
+  document.getElementById('race-modal').classList.add('open');
+}
+
+async function saveRace() {
+  const obj = { user_id: currentUser.id, name: document.getElementById('r-name').value.trim(), date: document.getElementById('r-date').value, type: document.getElementById('r-type').value, location: document.getElementById('r-loc').value.trim(), notes: document.getElementById('r-notes').value.trim() };
+  if (!obj.name || !obj.date) { alert('Enter a race name and date.'); return; }
+  if (editRaceId) {
+    await sb.from('races').update(obj).eq('id', editRaceId);
+    const idx = races.findIndex(r => r.id === editRaceId); if (idx > -1) races[idx] = { ...races[idx], ...obj };
+  } else {
+    const { data } = await sb.from('races').insert(obj).select().single();
+    if (data) races.push(data);
+  }
+  closeModal('race-modal'); renderRaces(); updateNextRace();
+}
+
+async function deleteRace() {
+  if (!editRaceId || !confirm('Delete this race?')) return;
+  await sb.from('races').delete().eq('id', editRaceId);
+  races = races.filter(r => r.id !== editRaceId);
+  closeModal('race-modal'); renderRaces(); updateNextRace();
+}
+
+// ── IMPORT ─────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+function handleFile(file) {
+  document.getElementById('parse-output').style.display = 'none';
+  document.getElementById('parse-error').style.display = 'none';
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  if (ext === 'fit') reader.readAsArrayBuffer(file); else reader.readAsText(file);
+  reader.onload = e => {
+    try {
+      let result;
+      if (ext === 'gpx') result = parseGPX(e.target.result, file.name);
+      else if (ext === 'tcx') result = parseTCX(e.target.result, file.name);
+      else if (ext === 'kml') result = parseKML(e.target.result, file.name);
+      else if (ext === 'csv') result = parseCSVFile(e.target.result, file.name);
+      else if (ext === 'fit') result = parseFIT(e.target.result, file.name);
+      else throw new Error('Unsupported file type: .' + ext);
+      showParseResult(result, file.name, ext.toUpperCase());
+    } catch(err) { showParseError(err.message); }
+  };
+}
+
+function haversine(la1,lo1,la2,lo2){const R=6371000,r=d=>d*Math.PI/180,dL=r(la2-la1),dO=r(lo2-lo1);const a=Math.sin(dL/2)**2+Math.cos(r(la1))*Math.cos(r(la2))*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function guessType(sport,name){const s=(sport+' '+name).toLowerCase();if(/swim|pool/.test(s))return'swim';if(/bike|cycling|ride/.test(s))return'bike';if(/brick|tri/.test(s))return'brick';if(/strength|gym/.test(s))return'strength';return'run';}
+
+function parseGPX(text,fname){
+  const doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror'))throw new Error('Invalid GPX file.');
+  const tpts=Array.from(doc.querySelectorAll('trkpt'));
+  if(!tpts.length)throw new Error('No track points found.');
+  const coords=tpts.map(p=>({lat:parseFloat(p.getAttribute('lat')),lon:parseFloat(p.getAttribute('lon')),ele:parseFloat(p.querySelector('ele')?.textContent||0),hr:parseInt(p.querySelector('hr')?.textContent||0)||null,time:p.querySelector('time')?.textContent}));
+  const name=doc.querySelector('name')?.textContent||fname.replace('.gpx','');
+  let distM=0;for(let i=1;i<coords.length;i++)distM+=haversine(coords[i-1].lat,coords[i-1].lon,coords[i].lat,coords[i].lon);
+  let durSec=0;if(coords[0]?.time&&coords[coords.length-1]?.time)durSec=Math.round((new Date(coords[coords.length-1].time)-new Date(coords[0].time))/1000);
+  let elevGain=0;for(let i=1;i<coords.length;i++){const d=coords[i].ele-coords[i-1].ele;if(d>0)elevGain+=d;}
+  const hrs=coords.filter(c=>c.hr).map(c=>c.hr);
+  return{title:name,type:guessType(doc.querySelector('type')?.textContent||'',name),date:coords[0]?.time?coords[0].time.split('T')[0]:todayStr(),duration:Math.round(durSec/60)||null,distance:distM?parseFloat(mToMi(distM).toFixed(2)):null,avg_hr:hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null,max_hr:hrs.length?Math.max(...hrs):null,pace:durSec&&distM?paceStr(durSec/distM):null,elev_gain:Math.round(elevGain*3.28084)||null,coords:coords.slice(0,400),notes:'Imported from GPX',source:'GPX'};
+}
+
+function parseTCX(text,fname){
+  const doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror'))throw new Error('Invalid TCX file.');
+  const tps=Array.from(doc.querySelectorAll('Trackpoint'));
+  const coords=tps.map(tp=>({lat:parseFloat(tp.querySelector('LatitudeDegrees')?.textContent||0),lon:parseFloat(tp.querySelector('LongitudeDegrees')?.textContent||0),ele:parseFloat(tp.querySelector('AltitudeMeters')?.textContent||0),hr:parseInt(tp.querySelector('Value')?.textContent||0)||null,time:tp.querySelector('Time')?.textContent})).filter(c=>c.lat&&c.lon);
+  if(!coords.length)throw new Error('No GPS points in TCX file.');
+  const name=doc.querySelector('Name')?.textContent||fname.replace('.tcx','');
+  let distM=0;for(let i=1;i<coords.length;i++)distM+=haversine(coords[i-1].lat,coords[i-1].lon,coords[i].lat,coords[i].lon);
+  let durSec=0;if(coords[0]?.time&&coords[coords.length-1]?.time)durSec=Math.round((new Date(coords[coords.length-1].time)-new Date(coords[0].time))/1000);
+  let elevGain=0;for(let i=1;i<coords.length;i++){const d=coords[i].ele-coords[i-1].ele;if(d>0)elevGain+=d;}
+  const hrs=coords.filter(c=>c.hr).map(c=>c.hr);
+  return{title:name,type:guessType(doc.querySelector('Activity')?.getAttribute('Sport')||'',name),date:coords[0]?.time?coords[0].time.split('T')[0]:todayStr(),duration:Math.round(durSec/60)||null,distance:distM?parseFloat(mToMi(distM).toFixed(2)):null,avg_hr:hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null,max_hr:hrs.length?Math.max(...hrs):null,pace:durSec&&distM?paceStr(durSec/distM):null,elev_gain:Math.round(elevGain*3.28084)||null,coords:coords.slice(0,400),notes:'Imported from TCX',source:'TCX'};
+}
+
+function parseKML(text,fname){
+  const doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror'))throw new Error('Invalid KML file.');
+  const ct=doc.querySelector('coordinates')?.textContent||'';
+  const coords=ct.trim().split(/\s+/).map(c=>{const[lon,lat,ele]=c.split(',').map(Number);return{lat,lon,ele:ele||0};}).filter(c=>c.lat&&c.lon);
+  if(!coords.length)throw new Error('No coordinates in KML.');
+  let distM=0;for(let i=1;i<coords.length;i++)distM+=haversine(coords[i-1].lat,coords[i-1].lon,coords[i].lat,coords[i].lon);
+  return{title:doc.querySelector('name')?.textContent||fname.replace('.kml',''),type:guessType('',fname),date:todayStr(),duration:null,distance:distM?parseFloat(mToMi(distM).toFixed(2)):null,avg_hr:null,max_hr:null,pace:null,elev_gain:null,coords:coords.slice(0,400),notes:'Imported from KML',source:'KML'};
+}
+
+function parseCSVFile(text,fname){
+  const lines=text.trim().split('\n');if(lines.length<2)throw new Error('CSV is empty.');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const row=lines[1].split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+  const get=keys=>{for(const k of keys){const i=headers.findIndex(h=>h.includes(k));if(i>=0&&row[i])return row[i];}return null;};
+  const dur=get(['duration','elapsed','moving']);let durMin=null;
+  if(dur){const p=dur.split(':');if(p.length===3)durMin=parseInt(p[0])*60+parseInt(p[1]);else if(p.length===2)durMin=parseInt(p[0]);else durMin=Math.round(parseFloat(dur));}
+  const dist=get(['distance']);let distMi=null;
+  if(dist){const d=parseFloat(dist);distMi=d>200?parseFloat(mToMi(d).toFixed(2)):parseFloat(d.toFixed(2));}
+  const dateRaw=get(['date','start'])||todayStr();
+  const dateStr=dateRaw.includes('/')?(()=>{const[m,d,y]=dateRaw.split('/');return`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`})():dateRaw.split('T')[0];
+  return{title:get(['title','name','activity'])||fname.replace('.csv',''),type:guessType(get(['type','sport'])||'',''),date:dateStr,duration:durMin,distance:distMi,avg_hr:parseInt(get(['avg hr','average hr'])||'')||null,max_hr:parseInt(get(['max hr'])||'')||null,pace:get(['pace'])||null,elev_gain:parseInt(get(['elevation','elev gain'])||'')||null,coords:[],notes:'Imported from CSV',source:'CSV'};
+}
+
+function parseFIT(buffer,fname){
+  return{title:fname.replace('.fit',''),type:guessType('',fname),date:todayStr(),duration:null,distance:null,avg_hr:null,max_hr:null,pace:null,elev_gain:null,coords:[],notes:'FIT detected. Re-export as GPX from Coros for full data.',source:'FIT'};
+}
+
+function showParseResult(result,filename,fmt){
+  parsedImport=result;
+  document.getElementById('parse-filename').textContent=filename;
+  document.getElementById('parse-fmt').textContent=fmt;
+  const rows=[['Sport',result.type],['Date',result.date],['Title',result.title],['Duration',result.duration?fmtDur(result.duration):'—'],['Distance',result.distance?fmtDist(result.distance):'—'],['Avg HR',result.avg_hr?result.avg_hr+' bpm':'—'],['Max HR',result.max_hr?result.max_hr+' bpm':'—'],['Pace',result.pace?result.pace+'/mi':'—'],['Elevation',result.elev_gain?result.elev_gain+'ft':'—']];
+  document.getElementById('parse-result').innerHTML=rows.map(([k,v])=>`<div class="parse-row"><span style="color:var(--text2)">${k}</span><span style="font-weight:500">${v||'—'}</span></div>`).join('');
+  const canvas=document.getElementById('route-canvas');
+  if(result.coords&&result.coords.length>2){canvas.style.display='block';setTimeout(()=>drawRoute(canvas,result.coords),50);}
+  else canvas.style.display='none';
+  document.getElementById('parse-output').style.display='block';
+}
+
+function showParseError(msg){
+  const el=document.getElementById('parse-error');
+  el.innerHTML=`<i class="ti ti-alert-circle"></i> ${msg}`;
+  el.style.display='block';
+  document.getElementById('parse-output').style.display='none';
+}
+
+function drawRoute(canvas,coords){
+  const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth||500;canvas.height=canvas.offsetHeight||120;
+  const W=canvas.width,H=canvas.height;
+  const lats=coords.map(c=>c.lat),lons=coords.map(c=>c.lon);
+  const minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons);
+  const pad=12,scale=Math.min((W-pad*2)/(maxLon-minLon||1),(H-pad*2)/(maxLat-minLat||1));
+  const offX=(W-(maxLon-minLon)*scale)/2,offY=(H-(maxLat-minLat)*scale)/2;
+  const toX=lon=>(lon-minLon)*scale+offX,toY=lat=>(maxLat-lat)*scale+offY;
+  ctx.clearRect(0,0,W,H);ctx.strokeStyle='#378ADD';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();coords.forEach((c,i)=>i===0?ctx.moveTo(toX(c.lon),toY(c.lat)):ctx.lineTo(toX(c.lon),toY(c.lat)));ctx.stroke();
+  ctx.fillStyle='#3B6D11';ctx.beginPath();ctx.arc(toX(coords[0].lon),toY(coords[0].lat),5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#E24B4A';ctx.beginPath();ctx.arc(toX(coords[coords.length-1].lon),toY(coords[coords.length-1].lat),5,0,Math.PI*2);ctx.fill();
+}
+
+async function confirmImport(){
+  if(!parsedImport)return;
+  const obj={user_id:currentUser.id,type:parsedImport.type,date:parsedImport.date,title:parsedImport.title,duration:parsedImport.duration,distance:parsedImport.distance,avg_hr:parsedImport.avg_hr,max_hr:parsedImport.max_hr,pace:parsedImport.pace,elev_gain:parsedImport.elev_gain,notes:parsedImport.notes,source:parsedImport.source};
+  const{data,error}=await sb.from('workouts').insert(obj).select().single();
+  if(error){alert('Error saving: '+error.message);return;}
+  workouts.unshift(data);resetImport();renderWeek();alert('Workout saved!');
+}
+
+function resetImport(){
+  parsedImport=null;
+  document.getElementById('parse-output').style.display='none';
+  document.getElementById('parse-error').style.display='none';
+  document.getElementById('file-input').value='';
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!workouts.length){alert('No workouts to export.');return;}
+  const cols=['Date','Title','Type','Source','Duration (min)','Distance (mi)','RPE','Avg HR','Max HR','Pace','Elevation (ft)','Notes'];
+  const rows=[...workouts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(w=>[w.date,w.title||'',w.type,w.source||'',w.duration||'',w.distance||'',w.rpe||'',w.avg_hr||'',w.max_hr||'',w.pace||'',w.elev_gain||'',w.notes||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv=[cols.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='endurancelog-export.csv';a.click();
+}
+
+// ── MODAL CLOSE ────────────────────────────────────────────────────
+document.getElementById('workout-modal').addEventListener('click',function(e){if(e.target===this)closeModal('workout-modal');});
+document.getElementById('race-modal').addEventListener('click',function(e){if(e.target===this)closeModal('race-modal');});
+</script>
+</body>
+</html>
